@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head><body style="margin:0"><script>
+const KEY = 'application_dys_profils_v1';
+function send(type, payload) { window.parent.postMessage(Object.assign({isStreamlitMessage:true,type:type},payload||{}),'*'); }
+window.addEventListener('message', function(event) {
+  if (event.source !== window.parent || !event.data || event.data.type !== 'streamlit:render') return;
+  const a = event.data.args || {};
+  try {
+    if (a.mode === 'load') {
+      const data = window.localStorage.getItem(KEY) || '';
+      send('streamlit:setComponentValue',{value:data,dataType:'json'});
+    } else if (a.mode === 'save' && typeof a.data === 'string') {
+      window.localStorage.setItem(KEY, a.data);
+    } else if (a.mode === 'clear') {
+      window.localStorage.removeItem(KEY);
+    }
+  } catch(e) {
+    if (a.mode === 'load') send('streamlit:setComponentValue',{value:'STORAGE_ERROR:'+e.message,dataType:'json'});
+  }
+  send('streamlit:setFrameHeight',{height:0});
+});
+send('streamlit:componentReady',{apiVersion:1});
+send('streamlit:setFrameHeight',{height:0});
+</script></body></html>
